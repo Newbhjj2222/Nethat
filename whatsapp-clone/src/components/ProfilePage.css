@@ -1,0 +1,38 @@
+.profile-page {
+  max-width: 400px;
+  margin: auto;
+  padding: 20px;
+  font-family: sans-serif;
+}
+
+.profile-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.profile-pic {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+}
+
+.profile-field {
+  margin: 10px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.delete-section {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.delete-button {
+  background-color: #d9534f;
+  color: white;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}

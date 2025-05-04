@@ -1,0 +1,114 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f2f5;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #075e54;
+  color: white;
+  padding: 10px 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.menu select {
+  background-color: #075e54;
+  color: white;
+  border: none;
+  font-size: 16px;
+  outline: none;
+}
+
+/* Main content area */
+.main-content {
+  flex: 1;
+  padding: 15px;
+  padding-bottom: 70px; /* Avoid overlap with footer */
+  overflow-y: auto;
+}
+
+.placeholder-page {
+  text-align: center;
+  margin-top: 50px;
+  color: #555;
+}
+
+/* Footer navigation */
+.footer-nav {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+  border-top: 1px solid #064b45;
+  background-color: #075e54;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 99;
+  color: white;
+}
+
+.footer-nav button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: white !important;
+  font-size: 20px;
+}
+
+.footer-nav button svg {
+  color: white !important;
+}
+
+.footer-nav button:focus,
+.footer-nav button:hover {
+  color: #25d366;
+}
+
+/* Floating action button */
+.floating-button {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: #25D366;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  z-index: 100;
+}
+
+.floating-button:hover {
+  background-color: #20c05c;
+}
