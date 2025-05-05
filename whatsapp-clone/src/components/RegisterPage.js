@@ -7,18 +7,35 @@ function RegisterPage({ onRegister, goToLogin }) {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
-  const [profilePic, setProfilePic] = useState(null);
   const [preview, setPreview] = useState(null);
   const [bio, setBio] = useState('');
   const [accountType, setAccountType] = useState('');
+  const [error, setError] = useState('');
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    setProfilePic(file);
     if (file) {
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        setError('Ifoto irengeje 5MB. Hitamo ifoto nto.');
+        setPreview(null);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result);
+        const base64String = reader.result;
+
+        // Tugenekere ubunini bwa base64
+        const estimatedBase64Size = Math.ceil(file.size * 1.37);
+        if (estimatedBase64Size > maxSize) {
+          setError('Base64 y’iyo foto irengeje 5MB. Hitamo indi.');
+          setPreview(null);
+          return;
+        }
+
+        setPreview(base64String);
+        setError('');
       };
       reader.readAsDataURL(file);
     }
@@ -30,6 +47,10 @@ function RegisterPage({ onRegister, goToLogin }) {
       alert('Uzuza byose mbere yo kwiyandikisha.');
       return;
     }
+    if (!preview) {
+      alert('Shyiramo ifoto mbere yo kwiyandikisha.');
+      return;
+    }
 
     const userRef = ref(db, 'users/' + phone);
     const userData = {
@@ -37,7 +58,7 @@ function RegisterPage({ onRegister, goToLogin }) {
       password,
       fullName,
       username,
-      profilePic: preview,
+      profilePic: preview, // base64 string
       bio,
       accountType,
       createdAt: new Date().toISOString(),
@@ -46,7 +67,7 @@ function RegisterPage({ onRegister, goToLogin }) {
     try {
       await set(userRef, userData);
       alert('Wiyandikishije neza! Injira ukoresheje nimero na password.');
-      goToLogin(); // Ahita ajyanwa kuri LoginPage
+      goToLogin();
     } catch (error) {
       console.error('Error saving user:', error);
       alert('Habaye ikibazo. Gerageza nanone.');
@@ -65,7 +86,6 @@ function RegisterPage({ onRegister, goToLogin }) {
           required
           style={styles.input}
         />
-
         <input
           type="text"
           placeholder="Username"
@@ -74,7 +94,6 @@ function RegisterPage({ onRegister, goToLogin }) {
           required
           style={styles.input}
         />
-
         <input
           type="tel"
           placeholder="Nimero ya telefone"
@@ -83,7 +102,6 @@ function RegisterPage({ onRegister, goToLogin }) {
           required
           style={styles.input}
         />
-
         <input
           type="password"
           placeholder="Ijambobanga"
@@ -92,7 +110,6 @@ function RegisterPage({ onRegister, goToLogin }) {
           required
           style={styles.input}
         />
-
         <textarea
           placeholder="Andika Bio yawe"
           value={bio}
@@ -100,7 +117,6 @@ function RegisterPage({ onRegister, goToLogin }) {
           required
           style={styles.textarea}
         />
-
         <select
           value={accountType}
           onChange={(e) => setAccountType(e.target.value)}
@@ -111,7 +127,6 @@ function RegisterPage({ onRegister, goToLogin }) {
           <option value="author">Author</option>
           <option value="writer">Writer</option>
         </select>
-
         <input
           type="file"
           accept="image/*"
@@ -119,6 +134,7 @@ function RegisterPage({ onRegister, goToLogin }) {
           style={styles.fileInput}
         />
 
+        {error && <p style={{ color: 'red' }}>{error}</p>}
         {preview && (
           <img
             src={preview}

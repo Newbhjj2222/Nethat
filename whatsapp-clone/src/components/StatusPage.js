@@ -2,13 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   ref,
   set,
-  push,
   onValue,
   update,
   get,
 } from "firebase/database";
 import { db } from "../firebase";
-import "./StatusPage.css"; // CSS file twanditse
+import "./StatusPage.css";
 
 function StatusPage({ currentUser }) {
   const [textStatus, setTextStatus] = useState("");
@@ -21,12 +20,15 @@ function StatusPage({ currentUser }) {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    const reader = new FileReader();
+    if (file && file.size > 5 * 1024 * 1024) {
+      alert("Ifoto irengeje 5MB. Hitamo ifoto ntoya.");
+      return;
+    }
 
+    const reader = new FileReader();
     reader.onloadend = () => {
       setImageFile(reader.result);
     };
-
     if (file) {
       reader.readAsDataURL(file);
     }
@@ -45,14 +47,15 @@ function StatusPage({ currentUser }) {
       type: imageFile ? "image" : "text",
       text: textStatus,
       image: imageFile || null,
-      bgColor: bgColor,
+      bgColor,
       sponsor: sponsorLink || null,
-      timestamp: timestamp,
+      timestamp,
       views: 0,
     };
 
     set(ref(db, `statuses/${statusId}`), newStatus);
 
+    // Gusubiza ibintu kuri default
     setTextStatus("");
     setImageFile(null);
     setSponsorLink("");
@@ -132,8 +135,7 @@ function StatusPage({ currentUser }) {
             />
           </label>
 
-          <br />
-          <br />
+          <br /><br />
 
           <label>
             Shyiraho Ifoto:
@@ -148,8 +150,7 @@ function StatusPage({ currentUser }) {
             />
           )}
 
-          <br />
-          <br />
+          <br /><br />
 
           <input
             type="text"
@@ -189,13 +190,11 @@ function StatusPage({ currentUser }) {
                 {status.text && <p>{status.text}</p>}
               </>
             )}
-
             {status.sponsor && (
               <a href={status.sponsor} target="_blank" rel="noreferrer">
                 Sponsored Link
               </a>
             )}
-
             <p style={{ fontSize: 12, color: "#555" }}>
               Views: {status.views || 0}
             </p>

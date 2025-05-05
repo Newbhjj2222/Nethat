@@ -19,7 +19,7 @@ const App = () => {
   const [userData, setUserData] = useState(null);
   const [targetUser, setTargetUser] = useState(null);
 
-  // Firebase demo
+  // Firebase demo - Count visits
   useEffect(() => {
     const demoRef = ref(db, 'demo/visitCount');
     set(demoRef, { count: 1 });
@@ -30,7 +30,7 @@ const App = () => {
     });
   }, []);
 
-  // Authentication pages
+  // Authentication logic
   if (!isLoggedIn) {
     return authPage === 'login' ? (
       <LoginPage
@@ -51,13 +51,16 @@ const App = () => {
     );
   }
 
-  // Main content
+  // Main App Layout
   return (
     <div className="app">
       <header className="header">
         <div className="logo">NetChat</div>
         <div className="menu">
-          <select onChange={(e) => setActivePage(e.target.value)} value={activePage}>
+          <select
+            value={activePage}
+            onChange={(e) => setActivePage(e.target.value)}
+          >
             <option value="home">Home</option>
             <option value="chat">Chat</option>
             <option value="status">Status</option>
@@ -73,15 +76,19 @@ const App = () => {
             setTargetUser={setTargetUser}
           />
         )}
+
         {activePage === 'chat' && targetUser && (
           <ChatWindow targetUser={targetUser} currentUser={userData} />
         )}
+
         {activePage === 'status' && (
           <StatusPage currentUser={userData} />
         )}
+
         {activePage === 'settings' && (
           <ProfilePage user={userData} setUserData={setUserData} />
         )}
+
         {activePage &&
           !['home', 'chat', 'status', 'settings'].includes(activePage) && (
             <div className="placeholder-page">
