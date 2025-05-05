@@ -12,6 +12,7 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
   const [unreadMessages, setUnreadMessages] = useState({});
   const [messageCount, setMessageCount] = useState({});
 
+  // Get current user from localStorage
   useEffect(() => {
     const userData = localStorage.getItem('currentUser');
     if (userData) {
@@ -23,6 +24,7 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
     }
   }, []);
 
+  // Fetch all users except the current user
   useEffect(() => {
     if (!currentUser) return;
 
@@ -31,9 +33,11 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
       const data = snapshot.val();
       const usersList = [];
 
-      for (let id in data) {
-        if (id !== currentUser.id) {
-          usersList.push({ id, ...data[id] });
+      if (data) {
+        for (let phone in data) {
+          if (phone !== currentUser.id) {
+            usersList.push({ id: phone, phone, ...data[phone] });
+          }
         }
       }
 
@@ -41,29 +45,32 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
     });
   }, [currentUser]);
 
+  // Fetch unread messages and total message count
   useEffect(() => {
     if (!currentUser) return;
 
-    const unreadRef = ref(db, `messages/${currentUser.phone}`);
-    onValue(unreadRef, (snapshot) => {
+    const messagesRef = ref(db, `messages`);
+    onValue(messagesRef, (snapshot) => {
       const data = snapshot.val();
       const unreadCounts = {};
       const messageTotals = {};
 
-      for (let chatId in data) {
-        const messages = data[chatId];
-        let unread = 0;
-        let total = 0;
+      if (data) {
+        for (let chatId in data) {
+          const messages = data[chatId];
+          let unread = 0;
+          let total = 0;
 
-        Object.values(messages).forEach((msg) => {
-          total++;
-          if (!msg.read && msg.receiver === currentUser.phone) {
-            unread++;
-          }
-        });
+          Object.values(messages).forEach((msg) => {
+            total++;
+            if (!msg.read && msg.receiver === currentUser.id) {
+              unread++;
+            }
+          });
 
-        if (unread > 0) unreadCounts[chatId] = unread;
-        if (total > 0) messageTotals[chatId] = total;
+          if (unread > 0) unreadCounts[chatId] = unread;
+          if (total > 0) messageTotals[chatId] = total;
+        }
       }
 
       setUnreadMessages(unreadCounts);
@@ -71,39 +78,36 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
     });
   }, [currentUser]);
 
+  // Search filter
   const filteredUsers = users.filter((user) =>
     user.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleChatClick = (user) => {
-    // Set target user for chat
-    if (setTargetUser && typeof setTargetUser === 'function') {
-      setTargetUser(user); // Set selected user
-      setActivePage('chat'); // Change page to chat
+  // Generate chat ID
+  const getChatId = (phone1, phone2) => {
+    return [phone1, phone2].sort().join('_');
+  };
 
-      // Mark messages as read when user clicks on chat
-      const chatId = getChatId(currentUser.phone, user.phone);
-      const messagesRef = ref(db, `messages/${chatId}`);
-      onValue(messagesRef, (snapshot) => {
+  // Handle chat click
+  const handleChatClick = (user) => {
+    if (setTargetUser && typeof setTargetUser === 'function') {
+      setTargetUser(user);
+      setActivePage('chat');
+
+      const chatId = getChatId(currentUser.id, user.id);
+      const chatRef = ref(db, `messages/${chatId}`);
+
+      onValue(chatRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-          Object.values(data).forEach((msg) => {
-            if (msg.receiver === currentUser.phone && !msg.read) {
-              const messageKey = msg.timestamp; // Unique key for each message
-              update(ref(db, `messages/${chatId}/${messageKey}`), {
-                read: true,
-              });
+          Object.entries(data).forEach(([key, msg]) => {
+            if (!msg.read && msg.receiver === currentUser.id) {
+              update(ref(db, `messages/${chatId}/${key}`), { read: true });
             }
           });
         }
       });
-    } else {
-      console.warn('setTargetUser is not a function');
     }
-  };
-
-  const getChatId = (phone1, phone2) => {
-    return [phone1, phone2].sort().join('_');
   };
 
   return (
@@ -125,7 +129,7 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
       <div className="user-list">
         {filteredUsers.length > 0 ? (
           filteredUsers.map((user) => {
-            const chatId = getChatId(currentUser.phone, user.phone);
+            const chatId = getChatId(currentUser.id, user.id);
             return (
               <div key={user.id} className="user-card">
                 <div className="user-info">
@@ -144,14 +148,10 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
                 <button className="chat-btn" onClick={() => handleChatClick(user)}>
                   <FiMessageSquare size={18} /> Chat
                   {messageCount[chatId] && (
-                    <span className="message-count">
-                      {messageCount[chatId]}
-                    </span>
+                    <span className="message-count">{messageCount[chatId]}</span>
                   )}
                   {unreadMessages[chatId] && (
-                    <span className="unread-badge">
-                      {unreadMessages[chatId]}
-                    </span>
+                    <span className="unread-badge">{unreadMessages[chatId]}</span>
                   )}
                 </button>
               </div>
