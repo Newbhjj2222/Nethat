@@ -4,7 +4,7 @@ import { db } from '../firebase';
 import { FiSearch, FiMessageSquare } from 'react-icons/fi';
 import './HomePage.css';
 
-const HomePage = ({ setActivePage, setTargetUser }) => {
+const HomePage = ({ setActivePage, setTargetUser, currentUserPhone }) => {
   const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,19 +12,20 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
   const [unreadMessages, setUnreadMessages] = useState({});
   const [messageCount, setMessageCount] = useState({});
 
-  // Get current user from localStorage
+  // Get currentUser from Firebase using phone number
   useEffect(() => {
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      try {
-        setCurrentUser(JSON.parse(userData));
-      } catch (error) {
-        console.error('Failed to parse currentUser:', error);
-      }
-    }
-  }, []);
+    if (!currentUserPhone) return;
 
-  // Fetch all users except the current user
+    const userRef = ref(db, `users/${currentUserPhone}`);
+    onValue(userRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setCurrentUser({ id: currentUserPhone, ...data });
+      }
+    });
+  }, [currentUserPhone]);
+
+  // Fetch all users except current user
   useEffect(() => {
     if (!currentUser) return;
 
@@ -45,7 +46,7 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
     });
   }, [currentUser]);
 
-  // Fetch unread messages and total message count
+  // Fetch unread messages and message counts
   useEffect(() => {
     if (!currentUser) return;
 
@@ -78,17 +79,11 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
     });
   }, [currentUser]);
 
-  // Search filter
-  const filteredUsers = users.filter((user) =>
-    user.username?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // Generate chat ID
   const getChatId = (phone1, phone2) => {
     return [phone1, phone2].sort().join('_');
   };
 
-  // Handle chat click
   const handleChatClick = (user) => {
     if (setTargetUser && typeof setTargetUser === 'function') {
       setTargetUser(user);
@@ -110,9 +105,12 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
     }
   };
 
+  const filteredUsers = users.filter((user) =>
+    user.username?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="home-container">
-      {/* Search Bar */}
       <div className="search-bar-container">
         <div className="search-bar">
           <FiSearch className="text-gray-400" />
@@ -125,7 +123,6 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
         </div>
       </div>
 
-      {/* User List */}
       <div className="user-list">
         {filteredUsers.length > 0 ? (
           filteredUsers.map((user) => {
@@ -162,7 +159,6 @@ const HomePage = ({ setActivePage, setTargetUser }) => {
         )}
       </div>
 
-      {/* Floating Modal */}
       {selectedUser && (
         <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
           <div className="modal-card">
